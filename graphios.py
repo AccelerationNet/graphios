@@ -95,6 +95,7 @@ def configure(opts):
 
     if opts.verbose:
         log.setLevel(logging.DEBUG)
+        log.addHandler(logging.StreamHandler())
     else:
         log.setLevel(log_level)
 
@@ -131,7 +132,6 @@ def send_carbon(carbon_list):
     #message = '\n'.join(carbon_list) + '\n'
     try:
         sock.sendall(message)
-        log.debug("sending to carbon: %s" % message)
         return True
     except Exception, e:
         log.critical("Can't send message to carbon error:%s" % (e))
@@ -323,6 +323,7 @@ def process_service_data(file_name, delete_after=0):
         So I set the _graphitepostfix to 'domain.com.nagios'
     """
     try:
+        log.debug("Starting on %r", file_name)
         f = open(file_name, "r")
         file_array = f.readlines()
         f.close
@@ -416,12 +417,15 @@ def process_perf_string(nagios_perf_string):
         check_mp to force your units to be consistent. Graphios plain
         ignores the UOM.
     """
-#    log.debug("perfstring:%s" % (nagios_perf_string))
-    tmp = re.findall("=?[^;]*", nagios_perf_string)
-    (name, value) = tmp[0].split('=')
-    value = re.sub('[a-zA-Z]', '', value)
-    value = re.sub('\%', '', value)
-    return name, value
+    try:
+    #    log.debug("perfstring:%s" % (nagios_perf_string))
+        tmp = re.findall("=?[^;]*", nagios_perf_string)
+        (name, value) = tmp[0].split('=')
+        value = re.sub('[a-zA-Z]', '', value)
+        value = re.sub('\%', '', value)
+        return name, value
+    except:
+        log.exception("Failed perfdata parsing: %r", nagios_perf_string)
 
 
 def process_service_perf_data(carbon_string, perf_data, time):
