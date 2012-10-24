@@ -1,0 +1,17 @@
+# graphios daemon
+
+description	"Graphios transfers nagios performance data to graphite"
+author		"Ryan Davis <ryan@acceleration.net>"
+
+start on started carbon-cache
+stop on stopping carbon-cache
+
+respawn
+
+pre-start script
+    # prepare environment
+    mkdir -p -m 775 /tmp/nagdb
+    chown nagios /tmp/nagdb
+end script
+
+exec sudo -u nagios /usr/bin/python /opt/graphios/graphios.py --spool-directory /tmp/nagdb --log-file /var/log/nagios3/graphios.log
